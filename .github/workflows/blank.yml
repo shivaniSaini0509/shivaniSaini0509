@@ -1,0 +1,33 @@
+name: Sync master to child branches
+
+on:
+  push:
+    branches:
+      - master  # Triggers only when new commits are pushed to master
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full history to access all branches
+
+      - name: Set up Git
+        run: |
+          git config --global user.name "GitHub Action Automated"
+          git config --global user.email "action@github.com"
+
+      - name: Fetch all branches
+        run: git fetch --all
+
+      - name: Merge master into child branches and push
+        run: |
+          for branch in aais_dev aais_uat; do
+            echo "Syncing $branch with master..."
+            git checkout $branch
+            git merge origin/master --no-edit || echo "Merge conflict in $branch"
+            git push origin $branch
+          done
